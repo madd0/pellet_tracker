@@ -29,6 +29,7 @@ class PelletRefillButton(ButtonEntity):
         """Initialize the button."""
         self._tracker = tracker
         self._attr_unique_id = f"{tracker.entry_id}_refill"
+        self._attr_device_info = tracker.device_info
 
     async def async_press(self) -> None:
         """Handle the button press."""

@@ -4,11 +4,13 @@ This document outlines the technical design, logic, and architecture of the **Pe
 
 ## 1. Overview
 
-The Pellet Tracker integration creates a **Virtual Sensor** that estimates the remaining fuel level in a pellet stove. Since many stoves do not have a physical level sensor, this integration proxies the level by tracking the stove's activity over time.
+The Pellet Tracker integration creates a **Virtual Device** that estimates the remaining fuel level in a pellet stove. Since many stoves do not have a physical level sensor, this integration proxies the level by tracking the stove's activity over time.
 
 It relies on two primary inputs from the stove:
 1.  **Status**: Is the stove running? (e.g., `WORK`, `START`, `OFF`)
 2.  **Power Level**: How hard is it working? (e.g., `1` to `6`)
+
+The integration groups its entities (Sensor, Button) under a single **Device** in Home Assistant, allowing for easy management of multiple stoves.
 
 ## 2. Consumption Model
 

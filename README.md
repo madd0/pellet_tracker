@@ -34,7 +34,12 @@ For a detailed explanation of how the integration works, including the math behi
 1. Go to Settings > Devices & Services.
 2. Click "Add Integration".
 3. Search for "Pellet Tracker".
-4. Follow the configuration steps.
+4. Follow the configuration steps:
+    - **Name**: Give your stove a friendly name (e.g., "Living Room Stove").
+    - **Status Entity**: The sensor indicating if the stove is On/Off/Heating.
+    - **Power Entity**: The sensor indicating the current power level (1-5).
+    - **Tank Size**: The capacity of your pellet tank in kg.
+    - **Active Statuses**: Select the status values that indicate the stove is consuming pellets (e.g., "WORK", "START").
 
 ## Contributing
 

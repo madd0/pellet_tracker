@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pellet Tracker from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     
-    tracker = PelletTracker(hass, entry.data, entry.entry_id)
+    tracker = PelletTracker(hass, entry.data, entry.entry_id, entry.title)
     await tracker.async_initialize()
     
     hass.data[DOMAIN][entry.entry_id] = tracker

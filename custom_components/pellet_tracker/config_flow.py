@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
@@ -40,6 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_NAME, default="Pellet Stove"): str,
                     vol.Required(CONF_STATUS_ENTITY): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="sensor")
                     ),
@@ -63,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ]
             
             data = {**self.data, **user_input}
-            return self.async_create_entry(title="Pellet Tracker", data=data)
+            return self.async_create_entry(title=self.data[CONF_NAME], data=data)
 
         # Try to get options from the status entity
         status_entity = self.data[CONF_STATUS_ENTITY]

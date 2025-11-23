@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval, async_track_state_change_event
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -35,10 +36,11 @@ DEFAULT_RATES = {
 class PelletTracker:
     """Class to manage pellet consumption."""
 
-    def __init__(self, hass: HomeAssistant, config: dict, entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict, entry_id: str, name: str) -> None:
         self.hass = hass
         self.config = config
         self.entry_id = entry_id
+        self.name = name
         # Unique storage key per entry to support multiple stoves if needed
         self._store = Store(hass, STORAGE_VERSION, f"{STORAGE_KEY}_{entry_id}")
         
@@ -154,3 +156,13 @@ class PelletTracker:
             "total_consumed_session_g": self.total_consumed_session_g,
         }
         await self._store.async_save(data)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.entry_id)},
+            name=self.name,
+            manufacturer="Pellet Tracker",
+            model="Virtual Sensor",
+        )

@@ -38,6 +38,7 @@ class PelletTrackerSensor(SensorEntity):
         """Initialize the sensor."""
         self._tracker = tracker
         self._attr_unique_id = f"{tracker.entry_id}_level"
+        self._attr_device_info = tracker.device_info
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
