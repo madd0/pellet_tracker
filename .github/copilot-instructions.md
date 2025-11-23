@@ -3,21 +3,31 @@
 You are an expert AI programming assistant working on a Home Assistant custom integration called "Pellet Tracker".
 
 ## Project Overview
-This integration tracks the remaining level of pellets in a pellet stove. It uses a virtual sensor approach, estimating consumption based on the stove's status and power level. It also features an auto-calibration mechanism using EWMA (Exponentially Weighted Moving Average).
+This integration tracks the remaining level of pellets in a pellet stove. It uses a virtual sensor approach, estimating consumption based on the stove's status and power level.
 
-## Key Components
-- **`custom_components/pellet_tracker/`**: The main integration directory.
-- **`sensor.py`**: Contains the `PelletTrackerSensor` class.
-- **`config_flow.py`**: Handles the configuration UI.
-- **`__init__.py`**: Sets up the integration.
+## Architecture
+The project follows a "Coordinator/Tracker" pattern where logic is separated from entities.
+- **`tracker.py`**: The core logic engine. It handles:
+    - State persistence (using `homeassistant.helpers.storage.Store`).
+    - Consumption calculations (Time * Rate).
+    - Event listeners (Stove Status/Power changes).
+    - Timer loops (1-minute updates).
+- **`sensor.py`**: A dumb presentation layer that subscribes to `tracker.py` updates.
+- **`button.py`**: Triggers actions (Refill) on the `tracker.py`.
+- **`config_flow.py`**: Handles setup, inspecting target entities to provide dynamic options.
+
+## Key Files
+- `custom_components/pellet_tracker/tracker.py`: **PRIMARY LOGIC**. Modify this for math/persistence.
+- `custom_components/pellet_tracker/sensor.py`: Entity definitions.
+- `custom_components/pellet_tracker/config_flow.py`: UI Configuration.
 
 ## Coding Standards
-- Follow PEP 8 style guidelines.
-- Use type hinting for all function arguments and return values.
-- Use `async` / `await` for all I/O operations.
-- Use Home Assistant's logging mechanism (`_LOGGER`).
+- **Async/Await**: All I/O and HA interactions must be async.
+- **Type Hinting**: Strictly enforced.
+- **Constants**: Use `const.py` for all string literals and configuration keys.
+- **Error Handling**: Gracefully handle missing entities or unavailable states in `tracker.py`.
 
-## Specific Instructions
-- When modifying `sensor.py`, ensure the state update logic correctly handles time intervals across midnight.
-- When implementing the EWMA logic, ensure the calibration factors are persisted and restored correctly.
-- Keep the `manifest.json` version updated when making significant changes.
+## Specific Behaviors
+- **Midnight Handling**: `tracker.py` uses `dt_util.utcnow()` and calculates deltas, so midnight is handled naturally.
+- **Persistence**: Data is saved to `.storage/pellet_tracker.storage_{entry_id}`.
+- **EWMA**: Auto-calibration logic resides in `tracker.py` (currently TODO).
