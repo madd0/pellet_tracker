@@ -28,9 +28,11 @@ env/
 .env/
 
 # VS Code
-.vscode/
+.vscode/settings.json
 
 # Home Assistant
 .storage/
+.homeassistant/
 home-assistant.log
 home-assistant.db
+

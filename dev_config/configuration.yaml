@@ -1,0 +1,59 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+
+# Mock entities for testing the integration
+input_select:
+  stove_status:
+    name: Mock Stove Status
+    options:
+      - "ALARM"
+      - "CLEAN"
+      - "ECO STOP"
+      - "MEM.ALM"
+      - "OFF"
+      - "STAND BY"
+      - "START"
+      - "STOP"
+      - "WAIT"
+      - "WORK"
+    initial: "OFF"
+    icon: mdi:fireplace
+
+  stove_power:
+    name: Mock Stove Power
+    options:
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+    initial: "1"
+    icon: mdi:fire
+
+# Create sensors from the input_selects so they look like real sensors to the integration
+template:
+  - sensor:
+      - name: "Stove Status"
+        state: "{{ states('input_select.stove_status') }}"
+      - name: "Stove Power"
+        state: "{{ states('input_select.stove_power') }}"
+
+logger:
+  default: debug
+
+recorder:
+  purge_keep_days: 1

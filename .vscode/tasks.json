@@ -4,13 +4,13 @@
         {
             "label": "Setup Home Assistant Config",
             "type": "shell",
-            "command": "mkdir -p config/custom_components && ln -sfn $(pwd)/custom_components/pellet_tracker config/custom_components/pellet_tracker",
+            "command": "mkdir -p .homeassistant/custom_components && cp -rn dev_config/* .homeassistant/ && ln -sfn $(pwd)/custom_components/pellet_tracker .homeassistant/custom_components/pellet_tracker",
             "problemMatcher": []
         },
         {
             "label": "Run Home Assistant",
             "type": "shell",
-            "command": "hass -c config",
+            "command": "hass -c .homeassistant",
             "dependsOn": "Setup Home Assistant Config",
             "problemMatcher": [],
             "group": {
