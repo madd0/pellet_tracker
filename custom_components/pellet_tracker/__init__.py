@@ -6,13 +6,19 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .tracker import PelletTracker
 
 # List the platforms that you want to support.
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pellet Tracker from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    
+    tracker = PelletTracker(hass, entry.data, entry.entry_id)
+    await tracker.async_initialize()
+    
+    hass.data[DOMAIN][entry.entry_id] = tracker
     
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -21,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        pass
-        # hass.data[DOMAIN].pop(entry.entry_id)
+        tracker = hass.data[DOMAIN].pop(entry.entry_id)
+        tracker.close()
 
     return unload_ok
