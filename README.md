@@ -8,6 +8,10 @@ A custom integration for Home Assistant to track pellet stove consumption and re
 - **Calibration**: Uses EWMA (Exponentially Weighted Moving Average) to learn consumption rates over time.
 - **Configurable**: Set tank size, initial rates, and calibration parameters.
 
+## Documentation
+
+For a detailed explanation of how the integration works, including the math behind the consumption model and the auto-calibration logic, please see the [Technical Design Document](docs/technical_design.md).
+
 ## Installation
 
 ### HACS (Recommended)
