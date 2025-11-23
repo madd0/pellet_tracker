@@ -1,0 +1,12 @@
+{
+  "domain": "pellet_tracker",
+  "name": "Pellet Tracker",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/madiazor/pellet_tracker",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/madiazor/pellet_tracker/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
