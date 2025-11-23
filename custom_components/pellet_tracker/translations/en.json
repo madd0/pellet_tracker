@@ -1,0 +1,25 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Pellet Tracker Configuration",
+                "description": "Select your pellet stove sensors.",
+                "data": {
+                    "status_entity": "Stove Status Entity",
+                    "power_entity": "Stove Power Entity"
+                }
+            },
+            "params": {
+                "title": "Pellet Tracker Parameters",
+                "description": "Configure tank size and active statuses.",
+                "data": {
+                    "tank_size": "Tank Size (kg)",
+                    "active_statuses": "Active Statuses (consuming pellets)"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        }
+    }
+}
