@@ -19,7 +19,10 @@ from .const import (
     CONF_POWER_ENTITY,
     CONF_TANK_SIZE,
     CONF_ACTIVE_STATUSES,
+    CONF_POWER_LEVELS,
+    CONF_MAX_RATE,
     DEFAULT_TANK_SIZE,
+    DEFAULT_MAX_RATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,10 +61,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the parameters step."""
         if user_input is not None:
             # Process the active statuses string into a list if it's a string
-            # (It will be a list if using SelectSelector, string if using text input)
             if isinstance(user_input[CONF_ACTIVE_STATUSES], str):
                 user_input[CONF_ACTIVE_STATUSES] = [
                     s.strip() for s in user_input[CONF_ACTIVE_STATUSES].split(",")
+                ]
+
+            # Process power levels
+            if isinstance(user_input.get(CONF_POWER_LEVELS), str):
+                user_input[CONF_POWER_LEVELS] = [
+                    s.strip() for s in user_input[CONF_POWER_LEVELS].split(",")
                 ]
             
             data = {**self.data, **user_input}
@@ -88,7 +96,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_ACTIVE_STATUSES, default=valid_defaults
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(options=options, multiple=True)
-                )
+                ),
+                vol.Required(
+                    CONF_POWER_LEVELS, default="1, 2, 3, 4, 5"
+                ): str,
+                vol.Required(CONF_MAX_RATE, default=DEFAULT_MAX_RATE): vol.Coerce(float),
             })
         else:
             # Fallback to text input
@@ -97,6 +109,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_ACTIVE_STATUSES, default=", ".join(default_statuses)
                 ): str,
+                vol.Required(
+                    CONF_POWER_LEVELS, default="1, 2, 3, 4, 5"
+                ): str,
+                vol.Required(CONF_MAX_RATE, default=DEFAULT_MAX_RATE): vol.Coerce(float),
             })
 
         return self.async_show_form(

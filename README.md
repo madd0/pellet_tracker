@@ -37,9 +37,11 @@ For a detailed explanation of how the integration works, including the math behi
 4. Follow the configuration steps:
     - **Name**: Give your stove a friendly name (e.g., "Living Room Stove").
     - **Status Entity**: The sensor indicating if the stove is On/Off/Heating.
-    - **Power Entity**: The sensor indicating the current power level (1-5).
+    - **Power Entity**: The sensor indicating the current power level (e.g., 1-5).
     - **Tank Size**: The capacity of your pellet tank in kg.
     - **Active Statuses**: Select the status values that indicate the stove is consuming pellets (e.g., "WORK", "START").
+    - **Power Levels**: A comma-separated list of power levels your stove supports (e.g., "1, 2, 3, 4, 5").
+    - **Maximum Consumption Rate**: The consumption rate at the highest power level in kg/h (e.g., 1.8). The integration will calculate rates for lower levels automatically.
 
 ## Contributing
 

@@ -25,16 +25,26 @@ Where:
 *   **Time Elapsed**: The duration since the last update (in hours).
 *   **Consumption Rate**: The configured burn rate for the current power level (in grams/hour).
 
-### Default Rates (Example)
-| Power Level | Rate (g/h) |
-| :--- | :--- |
-| 0 (Off/Wait) | 0 |
-| 1 | 250 |
-| 2 | 400 |
-| 3 | 600 |
-| 4 | 900 |
-| 5 | 1300 |
-| 6 | 1800 |
+### Rate Calculation (Interpolation)
+Instead of using hardcoded defaults, the integration calculates consumption rates dynamically based on the user's configuration.
+
+1.  **Inputs**:
+    *   **Power Levels**: A list of levels (e.g., `1, 2, 3, 4, 5`).
+    *   **Max Rate**: The consumption at the highest level (e.g., `2.0 kg/h`).
+
+2.  **Logic**:
+    *   The **Highest Level** is assigned the **Max Rate**.
+    *   The **Lowest Level** (if > 0) is assigned a calculated minimum fraction.
+    *   Intermediate levels are calculated using **Linear Interpolation**.
+
+$$ \text{Rate}_{\text{level}} = \frac{\text{Level Value}}{\text{Max Level Value}} \times \text{Max Rate} $$
+
+*Example*:
+If Max Rate is 2000 g/h and levels are 1-5:
+*   Level 5: 2000 g/h
+*   Level 1: (1/5) * 2000 = 400 g/h
+
+If the levels are non-numeric (e.g., "Low", "Med", "High"), the system falls back to index-based interpolation (33%, 66%, 100%).
 
 ## 3. Auto-Calibration (EWMA)
 

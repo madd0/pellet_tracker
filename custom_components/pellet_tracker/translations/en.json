@@ -14,7 +14,9 @@
                 "description": "Configure tank size and active statuses.",
                 "data": {
                     "tank_size": "Tank Size (kg)",
-                    "active_statuses": "Active Statuses (consuming pellets)"
+                    "active_statuses": "Active Statuses (consuming pellets)",
+                    "power_levels": "Power Levels (comma separated)",
+                    "max_rate": "Maximum Consumption Rate (kg/h)"
                 }
             }
         },

@@ -14,7 +14,10 @@ from .const import (
     CONF_POWER_ENTITY,
     CONF_TANK_SIZE,
     CONF_ACTIVE_STATUSES,
+    CONF_POWER_LEVELS,
+    CONF_MAX_RATE,
     DEFAULT_TANK_SIZE,
+    DEFAULT_MAX_RATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,15 +26,8 @@ STORAGE_KEY = f"{DOMAIN}.storage"
 STORAGE_VERSION = 1
 UPDATE_INTERVAL = timedelta(minutes=1)
 
-DEFAULT_RATES = {
-    "0": 0,
-    "1": 250,
-    "2": 400,
-    "3": 600,
-    "4": 900,
-    "5": 1300,
-    "6": 1800,
-}
+# Default rates are now calculated dynamically
+# Unit: grams per hour (g/h)
 
 class PelletTracker:
     """Class to manage pellet consumption."""
@@ -48,7 +44,46 @@ class PelletTracker:
         self.active_statuses = config.get(CONF_ACTIVE_STATUSES, [])
         
         self.current_level_g = self.tank_size_g
-        self.rates = DEFAULT_RATES.copy()
+        
+        # Initialize rates based on configured power levels
+        power_levels = config.get(CONF_POWER_LEVELS)
+        if not power_levels:
+            # Default to 1-5 if not specified
+            power_levels = ["1", "2", "3", "4", "5"]
+
+        self.rates = {}
+        
+        # Separate "0" (off) from active levels
+        active_levels = [l for l in power_levels if l != "0"]
+        if "0" in power_levels:
+            self.rates["0"] = 0
+            
+        # Calculate rates for active levels using linear interpolation
+        num_levels = len(active_levels)
+        if num_levels > 0:
+            # Get max from config (stored in kg/h, convert to g/h)
+            max_rate = config.get(CONF_MAX_RATE, DEFAULT_MAX_RATE) * 1000
+            
+            # Try to parse levels as numbers to find the max level
+            try:
+                numeric_levels = [float(l) for l in active_levels]
+                max_level_val = max(numeric_levels)
+                is_numeric = True
+            except ValueError:
+                is_numeric = False
+            
+            if is_numeric and max_level_val > 0:
+                # Interpolate based on numeric value relative to max level
+                for level_str, level_val in zip(active_levels, numeric_levels):
+                    rate = (level_val / max_level_val) * max_rate
+                    self.rates[level_str] = int(rate)
+            else:
+                # Fallback to index-based interpolation if levels are not numeric
+                # Assumes levels are ordered from lowest to highest
+                for i, level in enumerate(active_levels):
+                    rate = ((i + 1) / num_levels) * max_rate
+                    self.rates[level] = int(rate)
+
         self.total_consumed_session_g = 0.0
         self.last_update = dt_util.utcnow()
         
@@ -115,16 +150,28 @@ class PelletTracker:
             return
             
         status = status_state.state
+        
+        power = power_state.state
+        # Try to normalize numeric power to match keys like "1", "2"
         try:
-            # Handle "1.0" or "1"
-            power = str(int(float(power_state.state)))
+            power = str(int(float(power)))
         except (ValueError, TypeError):
-            power = "0"
+            pass # Keep original string if not numeric
 
         # Calculate consumption
         consumption = 0.0
         if status in self.active_statuses:
-            rate = self.rates.get(power, self.rates.get("1", 250))
+            rate = self.rates.get(power)
+            if rate is None:
+                # Fallback logic
+                if "1" in self.rates:
+                    rate = self.rates["1"]
+                elif self.rates:
+                    # Use the first available rate if "1" is not found
+                    rate = next(iter(self.rates.values()))
+                else:
+                    rate = 0
+            
             consumption = rate * elapsed_hours
             
         if consumption > 0:
