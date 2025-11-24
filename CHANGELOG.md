@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-11-24
+### Fixed
+- Release workflow configuration (allow mutable releases).
+
 ## [0.2.0] - 2025-11-24
 ### Added
 - EWMA auto-calibration logic.
