@@ -1,6 +1,6 @@
-# Pellet Tracker for Home Assistant
+<p align="center"><img src="images/icon.svg" width="100" height="100" alt="Pellet Tracker Icon"></p>
 
-<img src="images/icon.svg" align="right" width="100" height="100" alt="Pellet Tracker Icon">
+# Pellet Tracker for Home Assistant
 
 A custom integration for Home Assistant to track pellet stove consumption and remaining levels.
 
@@ -51,4 +51,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
 
 ## License
 
-MIT License
+[MIT License](LICENSE)
