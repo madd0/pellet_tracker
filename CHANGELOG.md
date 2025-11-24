@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-24
+### Added
+- New service `pellet_tracker.set_level` to manually set the remaining pellet level (with optional calibration).
+- Enhanced debug logging for refill and calibration events (showing before/after states and effective rates).
+
 ## [0.2.4] - 2025-11-24
 ### Fixed
 - Fixed deprecation warning for `OptionsFlowHandler` (explicitly setting `config_entry` is deprecated).
