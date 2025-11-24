@@ -15,8 +15,9 @@
     - Refill Button.
     - Persistence (survives restarts).
     - Custom Icon (SVG/PNG) for HACS/GitHub.
+    - **Service: Set Level**: Allows manual correction of the pellet level (e.g., `pellet_tracker.set_level`).
 - **Pending Features**:
-    - Service to set specific level (not just full refill).
+    - None.
 
 ## System Patterns
 - **Tracker Pattern**: `PelletTracker` class acts as a singleton-per-config-entry. It manages its own listeners and notifies entities via a callback list.

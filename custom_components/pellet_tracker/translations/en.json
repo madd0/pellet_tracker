@@ -23,5 +23,25 @@
         "abort": {
             "already_configured": "Device is already configured"
         }
+    },
+    "services": {
+        "set_level": {
+            "name": "Set Level",
+            "description": "Manually set the remaining pellet level.",
+            "fields": {
+                "level": {
+                    "name": "Level",
+                    "description": "The remaining level in kilograms."
+                },
+                "entry_id": {
+                    "name": "Config Entry",
+                    "description": "The configuration entry to update."
+                },
+                "calibrate": {
+                    "name": "Calibrate",
+                    "description": "If true, the system will use this correction to learn and adjust consumption rates."
+                }
+            }
+        }
     }
 }

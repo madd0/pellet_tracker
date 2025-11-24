@@ -11,6 +11,21 @@ from .tracker import PelletTracker
 # List the platforms that you want to support.
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
 
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Pellet Tracker component."""
+    
+    async def handle_set_level(call):
+        entry_id = call.data.get("entry_id")
+        level_kg = call.data.get("level")
+        calibrate = call.data.get("calibrate", False)
+        
+        if DOMAIN in hass.data and entry_id in hass.data[DOMAIN]:
+            tracker = hass.data[DOMAIN][entry_id]
+            await tracker.async_set_level(level_kg, calibrate)
+            
+    hass.services.async_register(DOMAIN, "set_level", handle_set_level)
+    return True
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Pellet Tracker from a config entry."""
     hass.data.setdefault(DOMAIN, {})

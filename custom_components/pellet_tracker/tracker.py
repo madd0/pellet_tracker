@@ -216,49 +216,75 @@ class PelletTracker:
 
     async def async_refill(self):
         """Refill the tank to full."""
+        _LOGGER.info("Refill requested. Current Level: %.2f kg", self.current_level_g / 1000)
+
         # EWMA Auto-Calibration (Per-Level)
         # We only calibrate if the tank is nearly empty (< 10% remaining)
         threshold = self.tank_size_g * 0.1
         
         if self.current_level_g < threshold and self.total_consumed_session_g > 0:
-            # Assume we consumed the entire tank
-            actual_consumption = self.tank_size_g
-            estimated_consumption = self.total_consumed_session_g
-            
-            error_ratio = actual_consumption / estimated_consumption
-            
-            # Limit the error ratio to avoid wild swings
-            error_ratio = max(0.5, min(error_ratio, 2.0))
-            
-            _LOGGER.info(
-                "Auto-Calibrating Rates. Estimated: %.2f kg, Actual (Assumed): %.2f kg. Ratio: %.3f",
-                estimated_consumption / 1000,
-                actual_consumption / 1000,
-                error_ratio
+            # Assume we consumed the entire tank (Actual = Tank Size)
+            await self._async_calibrate(self.tank_size_g)
+        else:
+            _LOGGER.debug(
+                "Skipping calibration during refill. Level (%.2f kg) >= Threshold (%.2f kg) or No Consumption (%.2f kg)",
+                self.current_level_g / 1000,
+                threshold / 1000,
+                self.total_consumed_session_g / 1000
             )
-            
-            # Distribute error to levels based on their contribution
-            for level, level_consumption in self.session_consumption_by_level.items():
-                weight = level_consumption / estimated_consumption
-                
-                old_factor = self.correction_factors.get(level, 1.0)
-                # Update factor: New = Old * (1 + Alpha * Weight * (Error - 1))
-                new_factor = old_factor * (1 + DEFAULT_ALPHA * weight * (error_ratio - 1))
-                
-                self.correction_factors[level] = new_factor
-                
-                _LOGGER.debug(
-                    "Calibrating Level %s: Weight=%.2f, Old Factor=%.3f, New Factor=%.3f",
-                    level, weight, old_factor, new_factor
-                )
 
         self.current_level_g = self.tank_size_g
         self.total_consumed_session_g = 0
         self.session_consumption_by_level = {} # Reset session tracking
         self.last_update = dt_util.utcnow()
         
+        _LOGGER.info("Refill complete. New Level: %.2f kg", self.current_level_g / 1000)
         await self._async_save_data()
         self._notify_listeners()
+
+    async def _async_calibrate(self, actual_consumption_g: float):
+        """Run EWMA calibration based on actual consumption."""
+        estimated_consumption = self.total_consumed_session_g
+        
+        if estimated_consumption <= 0:
+            return
+
+        _LOGGER.debug("Starting Calibration. Current Factors: %s", self.correction_factors)
+
+        error_ratio = actual_consumption_g / estimated_consumption
+        
+        # Limit the error ratio to avoid wild swings
+        error_ratio = max(0.5, min(error_ratio, 2.0))
+        
+        _LOGGER.info(
+            "Auto-Calibrating Rates. Estimated: %.2f kg, Actual: %.2f kg. Ratio: %.3f",
+            estimated_consumption / 1000,
+            actual_consumption_g / 1000,
+            error_ratio
+        )
+        
+        # Distribute error to levels based on their contribution
+        for level, level_consumption in self.session_consumption_by_level.items():
+            weight = level_consumption / estimated_consumption
+            
+            old_factor = self.correction_factors.get(level, 1.0)
+            # Update factor: New = Old * (1 + Alpha * Weight * (Error - 1))
+            new_factor = old_factor * (1 + DEFAULT_ALPHA * weight * (error_ratio - 1))
+            
+            self.correction_factors[level] = new_factor
+            
+            _LOGGER.debug(
+                "Calibrating Level %s: Weight=%.2f, Old Factor=%.3f, New Factor=%.3f",
+                level, weight, old_factor, new_factor
+            )
+            
+        _LOGGER.debug("Calibration Complete. Updated Factors: %s", self.correction_factors)
+        
+        effective_rates = {
+            level: int(rate * self.correction_factors.get(level, 1.0))
+            for level, rate in self.rates.items()
+        }
+        _LOGGER.debug("New Effective Rates (g/h): %s", effective_rates)
 
     async def _async_save_data(self):
         """Save data to storage."""
@@ -280,3 +306,51 @@ class PelletTracker:
             manufacturer="Pellet Tracker",
             model="Virtual Sensor",
         )
+
+    async def async_set_level(self, level_kg: float, calibrate: bool = False):
+        """Manually set the current level."""
+        _LOGGER.info("Manual level set requested. Target: %.2f kg, Calibrate: %s", level_kg, calibrate)
+        _LOGGER.info("Current Level: %.2f kg", self.current_level_g / 1000)
+
+        new_level_g = level_kg * 1000
+        
+        # Clamp
+        if new_level_g > self.tank_size_g:
+            new_level_g = self.tank_size_g
+        if new_level_g < 0:
+            new_level_g = 0
+            
+        if calibrate:
+            if self.total_consumed_session_g > 0:
+                # Calculate actual consumption implied by this correction
+                # Start_Level = current_level_g + total_consumed_session_g
+                # Actual_Consumed = Start_Level - new_level_g
+                # Actual_Consumed = (current_level_g + total_consumed_session_g) - new_level_g
+                
+                actual_consumption_g = (self.current_level_g + self.total_consumed_session_g) - new_level_g
+                
+                if actual_consumption_g > 0:
+                    await self._async_calibrate(actual_consumption_g)
+                    
+                    # Reset session tracking after calibration
+                    self.total_consumed_session_g = 0
+                    self.session_consumption_by_level = {}
+                else:
+                    _LOGGER.warning("Cannot calibrate: Implied consumption is negative or zero.")
+            else:
+                _LOGGER.debug("Skipping calibration: No session consumption recorded.")
+        
+        # If we are setting a new level (even without calibration), we should probably reset the session
+        # to establish a new ground truth, otherwise future calibrations will be skewed by the pre-correction error.
+        # However, if calibrate=False, maybe the user just wants to tweak it slightly?
+        # Let's reset session only if we calibrated OR if the change is significant?
+        # For simplicity and correctness, setting a manual level establishes a new known state.
+        # We should reset the session counters so the next period starts fresh from this known level.
+        self.total_consumed_session_g = 0
+        self.session_consumption_by_level = {}
+        
+        self.current_level_g = new_level_g
+        
+        _LOGGER.info("Manual level set complete. New Level: %.2f kg", self.current_level_g / 1000)
+        self._notify_listeners()
+        await self._async_save_data()

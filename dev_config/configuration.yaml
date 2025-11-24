@@ -53,7 +53,7 @@ template:
         state: "{{ states('input_select.stove_power') }}"
 
 logger:
-  default: info
+  default: warning
   logs:
     custom_components.pellet_tracker: debug
 
