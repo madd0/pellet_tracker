@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2025-11-24
+### Fixed
+- Fixed deprecation warning for `OptionsFlowHandler` (explicitly setting `config_entry` is deprecated).
+
 ## [0.2.3] - 2025-11-24
 ### Fixed
 - Fixed an issue where configuration updates (like adding new power levels) were ignored because old rates were being restored from storage.
