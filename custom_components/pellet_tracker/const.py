@@ -14,3 +14,4 @@ CONF_MAX_RATE = "max_rate"
 DEFAULT_TANK_SIZE = 15.0  # kg
 DEFAULT_ACTIVE_STATUSES = ["WORK", "START"]
 DEFAULT_MAX_RATE = 1.8  # kg/h
+DEFAULT_ALPHA = 0.15  # Learning rate for EWMA

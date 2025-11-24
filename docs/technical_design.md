@@ -55,13 +55,20 @@ Pellet consumption rates are not static. They vary based on:
 To address this, the integration implements an **Exponentially Weighted Moving Average (EWMA)** algorithm to "learn" the true consumption rates over time.
 
 ### How it works
-1.  The system tracks how much it *thinks* it consumed since the last fill.
-2.  When the user triggers a **Refill Event** (indicating the tank is full), the system compares the *estimated* consumption against the *actual* tank capacity.
-3.  It calculates an error ratio and adjusts the consumption rates for the future.
+1.  The system tracks how much it *thinks* it consumed since the last fill (`total_consumed_session_g`).
+2.  It also tracks the consumption **per power level** (`session_consumption_by_level`).
+3.  When the user triggers a **Refill Event**, the system checks if the tank is nearly empty (Current Level < 10% of Tank Size).
+4.  If calibrating, it calculates an error ratio: `Actual (Tank Size) / Estimated`.
+    *   The error ratio is clamped between 0.5 and 2.0 to prevent extreme adjustments from a single anomalous session.
+5.  It updates the **Correction Factor** for each power level that was used, weighted by its contribution.
 
-$$ \text{New Rate} = \text{Old Rate} + \alpha \times (\text{Observed Rate} - \text{Old Rate}) $$
+$$ \text{New Factor}_i = \text{Old Factor}_i \times (1 + \alpha \times \text{Weight}_i \times (\text{Error Ratio} - 1)) $$
 
-*   **$\alpha$ (Alpha)**: The learning factor (typically 0.1 - 0.3). A higher alpha makes the system adapt faster but makes it more sensitive to outliers.
+Where:
+*   **$\text{Weight}_i$**: $\frac{\text{Consumption at Level } i}{\text{Total Estimated Consumption}}$
+*   **$\alpha$ (Alpha)**: The learning factor (0.15).
+
+This ensures that if the stove mostly ran at Power 5, the correction is primarily applied to Power 5's rate.
 
 ## 4. Architecture
 

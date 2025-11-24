@@ -45,6 +45,8 @@ For a detailed explanation of how the integration works, including the math behi
     - **Power Levels**: A comma-separated list of power levels your stove supports (e.g., "1, 2, 3, 4, 5").
     - **Maximum Consumption Rate**: The consumption rate at the highest power level in kg/h (e.g., 1.8). The integration will calculate rates for lower levels automatically.
 
+You can change these settings later by clicking "Configure" on the integration entry in the Devices & Services page.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.

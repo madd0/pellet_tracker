@@ -18,6 +18,7 @@ from .const import (
     CONF_MAX_RATE,
     DEFAULT_TANK_SIZE,
     DEFAULT_MAX_RATE,
+    DEFAULT_ALPHA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,10 +54,8 @@ class PelletTracker:
 
         self.rates = {}
         
-        # Separate "0" (off) from active levels
-        active_levels = [l for l in power_levels if l != "0"]
-        if "0" in power_levels:
-            self.rates["0"] = 0
+        # We allow "0" to be an active level if the user explicitly includes it in power_levels
+        active_levels = [l for l in power_levels]
             
         # Calculate rates for active levels using linear interpolation
         num_levels = len(active_levels)
@@ -85,6 +84,8 @@ class PelletTracker:
                     self.rates[level] = int(rate)
 
         self.total_consumed_session_g = 0.0
+        self.correction_factors = {}
+        self.session_consumption_by_level = {}
         self.last_update = dt_util.utcnow()
         
         self._listeners = []
@@ -97,8 +98,13 @@ class PelletTracker:
             self.current_level_g = restored.get("current_level_g", self.current_level_g)
             self.rates = restored.get("rates", self.rates)
             self.total_consumed_session_g = restored.get("total_consumed_session_g", 0.0)
+            self.correction_factors = restored.get("correction_factors", {})
+            self.session_consumption_by_level = restored.get("session_consumption_by_level", {})
+            
             # Ensure rate keys are strings
             self.rates = {str(k): v for k, v in self.rates.items()}
+            self.correction_factors = {str(k): v for k, v in self.correction_factors.items()}
+            self.session_consumption_by_level = {str(k): v for k, v in self.session_consumption_by_level.items()}
 
         # Start tracking
         self._remove_listeners.append(
@@ -163,6 +169,11 @@ class PelletTracker:
         if status in self.active_statuses:
             rate = self.rates.get(power)
             if rate is None:
+                _LOGGER.warning(
+                    "Stove is active (Status: %s) but Power Level '%s' is not configured in %s. "
+                    "Assuming 0 consumption. Please update configuration.",
+                    status, power, CONF_POWER_LEVELS
+                )
                 # Fallback logic
                 if "1" in self.rates:
                     rate = self.rates["1"]
@@ -172,7 +183,14 @@ class PelletTracker:
                 else:
                     rate = 0
             
-            consumption = rate * elapsed_hours
+            # Apply correction factor for this specific level
+            factor = self.correction_factors.get(power, 1.0)
+            consumption = (rate * factor) * elapsed_hours
+            
+            # Track consumption per level for calibration
+            if consumption > 0:
+                current_level_consumption = self.session_consumption_by_level.get(power, 0.0)
+                self.session_consumption_by_level[power] = current_level_consumption + consumption
             
         if consumption > 0:
             self.current_level_g -= consumption
@@ -187,10 +205,46 @@ class PelletTracker:
 
     async def async_refill(self):
         """Refill the tank to full."""
-        # TODO: Implement EWMA calibration here if we have 'amount added'
+        # EWMA Auto-Calibration (Per-Level)
+        # We only calibrate if the tank is nearly empty (< 10% remaining)
+        threshold = self.tank_size_g * 0.1
+        
+        if self.current_level_g < threshold and self.total_consumed_session_g > 0:
+            # Assume we consumed the entire tank
+            actual_consumption = self.tank_size_g
+            estimated_consumption = self.total_consumed_session_g
+            
+            error_ratio = actual_consumption / estimated_consumption
+            
+            # Limit the error ratio to avoid wild swings
+            error_ratio = max(0.5, min(error_ratio, 2.0))
+            
+            _LOGGER.info(
+                "Auto-Calibrating Rates. Estimated: %.2f kg, Actual (Assumed): %.2f kg. Ratio: %.3f",
+                estimated_consumption / 1000,
+                actual_consumption / 1000,
+                error_ratio
+            )
+            
+            # Distribute error to levels based on their contribution
+            for level, level_consumption in self.session_consumption_by_level.items():
+                weight = level_consumption / estimated_consumption
+                
+                old_factor = self.correction_factors.get(level, 1.0)
+                # Update factor: New = Old * (1 + Alpha * Weight * (Error - 1))
+                new_factor = old_factor * (1 + DEFAULT_ALPHA * weight * (error_ratio - 1))
+                
+                self.correction_factors[level] = new_factor
+                
+                _LOGGER.debug(
+                    "Calibrating Level %s: Weight=%.2f, Old Factor=%.3f, New Factor=%.3f",
+                    level, weight, old_factor, new_factor
+                )
+
         self.current_level_g = self.tank_size_g
         self.total_consumed_session_g = 0
-        self.last_update = dt_util.utcnow() # Reset timer to avoid jump
+        self.session_consumption_by_level = {} # Reset session tracking
+        self.last_update = dt_util.utcnow()
         
         await self._async_save_data()
         self._notify_listeners()
@@ -201,6 +255,8 @@ class PelletTracker:
             "current_level_g": self.current_level_g,
             "rates": self.rates,
             "total_consumed_session_g": self.total_consumed_session_g,
+            "correction_factors": self.correction_factors,
+            "session_consumption_by_level": self.session_consumption_by_level,
         }
         await self._store.async_save(data)
 

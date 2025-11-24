@@ -6,13 +6,14 @@
     - Config Flow (Name, Status, Power, Tank Size).
     - **Custom Power Levels**: User can define specific levels (e.g., "1,2,3,4,5,6,7").
     - **Dynamic Rate Calculation**: Rates are interpolated linearly based on a user-provided Max Rate.
+    - **EWMA Auto-Calibration**: Automatically adjusts consumption rates based on refill behavior.
+        - **Per-Level Calibration**: Distributes error correction to specific power levels based on their usage contribution.
     - Device Grouping (Entities grouped under a unique device).
     - Virtual Sensor (0-100%).
     - Refill Button.
     - Persistence (survives restarts).
     - Custom Icon (SVG/PNG) for HACS/GitHub.
 - **Pending Features**:
-    - EWMA Auto-Calibration (Logic exists in design, needs implementation in `tracker.py`).
     - Service to set specific level (not just full refill).
 
 ## System Patterns

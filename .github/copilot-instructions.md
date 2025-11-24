@@ -30,7 +30,7 @@ The project follows a "Coordinator/Tracker" pattern where logic is separated fro
 ## Specific Behaviors
 - **Midnight Handling**: `tracker.py` uses `dt_util.utcnow()` and calculates deltas, so midnight is handled naturally.
 - **Persistence**: Data is saved to `.storage/pellet_tracker.storage_{entry_id}`.
-- **EWMA**: Auto-calibration logic resides in `tracker.py` (currently TODO).
+- **EWMA**: Auto-calibration logic resides in `tracker.py`. It applies individual correction factors to each power level, updated on refill events (if tank < 10%).
 
 ## Documentation Maintenance
 - **Automatic Updates**: Every time you make changes to the code, you MUST update the following files to reflect the new state:
