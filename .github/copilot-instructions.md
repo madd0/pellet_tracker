@@ -31,3 +31,10 @@ The project follows a "Coordinator/Tracker" pattern where logic is separated fro
 - **Midnight Handling**: `tracker.py` uses `dt_util.utcnow()` and calculates deltas, so midnight is handled naturally.
 - **Persistence**: Data is saved to `.storage/pellet_tracker.storage_{entry_id}`.
 - **EWMA**: Auto-calibration logic resides in `tracker.py` (currently TODO).
+
+## Documentation Maintenance
+- **Automatic Updates**: Every time you make changes to the code, you MUST update the following files to reflect the new state:
+    - `docs/memory_bank.md`: Update Active Context and Implemented Features.
+    - `docs/technical_design.md`: Update architectural changes or logic explanations.
+    - `.github/copilot-instructions.md`: Update if new patterns or rules emerge.
+    - `README.md`: Update features and configuration instructions.
