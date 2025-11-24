@@ -74,7 +74,7 @@ This ensures that if the stove mostly ran at Power 5, the correction is primaril
 
 ### Components
 *   **`Sensor`**: The main entity (`sensor.pellet_level`) displaying the percentage.
-*   **`Storage`**: Uses `hass.helpers.storage.Store` to persist the state (current level, accumulated usage, learned rates) to disk. This ensures data survives Home Assistant restarts.
+*   **`Storage`**: Uses `hass.helpers.storage.Store` to persist the state (current level, accumulated usage, learned correction factors) to disk. This ensures data survives Home Assistant restarts. Note: Base consumption rates are *not* persisted; they are recalculated from configuration on every load to ensure config changes take effect immediately.
 *   **`Config Flow`**: UI for setting up the integration, selecting the source entities, and defining tank size.
 
 ### State Management

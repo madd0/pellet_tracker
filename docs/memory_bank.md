@@ -2,6 +2,8 @@
 
 ## Active Context
 - **Current Status**: Feature-complete MVP.
+- **Recent Fixes**:
+    - **Configuration Updates**: Fixed an issue where updating power levels in the config would not take effect because stale rates were being restored from storage. Now, base rates are always recalculated from config, while learned correction factors are preserved.
 - **Implemented Features**:
     - Config Flow (Name, Status, Power, Tank Size).
     - **Custom Power Levels**: User can define specific levels (e.g., "1,2,3,4,5,6,7").

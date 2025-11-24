@@ -96,15 +96,26 @@ class PelletTracker:
         restored = await self._store.async_load()
         if restored:
             self.current_level_g = restored.get("current_level_g", self.current_level_g)
-            self.rates = restored.get("rates", self.rates)
+            
+            # NOTE: We do NOT restore 'rates' from storage.
+            # 'rates' are the BASE consumption rates derived purely from the configuration (Power Levels & Max Rate).
+            # If we restored them, we would ignore configuration changes (like adding a new level or changing Max Rate).
+            # The actual "calibration" is stored in 'correction_factors', which IS restored below.
+            
             self.total_consumed_session_g = restored.get("total_consumed_session_g", 0.0)
             self.correction_factors = restored.get("correction_factors", {})
             self.session_consumption_by_level = restored.get("session_consumption_by_level", {})
             
-            # Ensure rate keys are strings
-            self.rates = {str(k): v for k, v in self.rates.items()}
+            # Ensure keys are strings
             self.correction_factors = {str(k): v for k, v in self.correction_factors.items()}
             self.session_consumption_by_level = {str(k): v for k, v in self.session_consumption_by_level.items()}
+
+            _LOGGER.debug(
+                "Restored state: Level=%.1fkg, Calibration Factors=%s. Base Rates (Config)=%s", 
+                self.current_level_g / 1000, 
+                self.correction_factors,
+                self.rates
+            )
 
         # Start tracking
         self._remove_listeners.append(
