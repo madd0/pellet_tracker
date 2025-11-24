@@ -31,7 +31,8 @@ jobs:
           zip -r ../../pellet_tracker.zip .
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: pellet_tracker.zip
           generate_release_notes: true
+          make_latest: true
