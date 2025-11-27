@@ -38,3 +38,10 @@ The project follows a "Coordinator/Tracker" pattern where logic is separated fro
     - `docs/technical_design.md`: Update architectural changes or logic explanations.
     - `.github/copilot-instructions.md`: Update if new patterns or rules emerge.
     - `README.md`: Update features and configuration instructions.
+
+## Custom Prompts
+This repository uses VS Code Copilot Custom Prompts defined in `.github/prompts/`.
+- To create a new prompt, add a `.prompt.md` file in that directory.
+- The file name determines the command (e.g., `translate.prompt.md` allows you to attach the prompt).
+- Documentation: https://code.visualstudio.com/docs/copilot/customization/prompt-files
+

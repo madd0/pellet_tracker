@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-11-27
+### Added
+- Spanish and French translations.
+
 ## [0.4.0] - 2025-11-27
 ### Changed
 - Updated `pellet_tracker.set_level` service to accept a percentage (0-100) instead of kilograms for easier estimation.

@@ -39,7 +39,7 @@
                 },
                 "calibrate": {
                     "name": "Calibrate",
-                    "description": "If true, the system will use this correction to learn and adjust consumption rates."
+                    "description": "If checked (value: true), the system will use this correction to learn and adjust consumption rates."
                 }
             }
         }

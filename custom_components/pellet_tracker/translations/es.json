@@ -1,0 +1,47 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configuración de Pellet Tracker",
+                "description": "Seleccione los sensores de su estufa de pellets.",
+                "data": {
+                    "status_entity": "Entidad de estado de la estufa",
+                    "power_entity": "Entidad de potencia de la estufa"
+                }
+            },
+            "params": {
+                "title": "Parámetros de Pellet Tracker",
+                "description": "Configure el tamaño del depósito y los estados activos.",
+                "data": {
+                    "tank_size": "Tamaño del depósito (kg)",
+                    "active_statuses": "Estados activos (consumiendo pellets)",
+                    "power_levels": "Niveles de potencia (separados por comas)",
+                    "max_rate": "Tasa máxima de consumo (kg/h)"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "El dispositivo ya está configurado"
+        }
+    },
+    "services": {
+        "set_level": {
+            "name": "Establecer nivel",
+            "description": "Establecer manualmente el nivel restante de pellets.",
+            "fields": {
+                "level": {
+                    "name": "Nivel",
+                    "description": "El nivel restante en porcentaje (0-100)."
+                },
+                "entry_id": {
+                    "name": "Configuración",
+                    "description": "La configuración a actualizar."
+                },
+                "calibrate": {
+                    "name": "Calibrar",
+                    "description": "Si está marcado (valor: true), el sistema usará esta corrección para aprender y ajustar las tasas de consumo."
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Configuration de Pellet Tracker",
+                "description": "Sélectionnez les capteurs de votre poêle à granulés.",
+                "data": {
+                    "status_entity": "Entité d'état du poêle",
+                    "power_entity": "Entité de puissance du poêle"
+                }
+            },
+            "params": {
+                "title": "Paramètres de Pellet Tracker",
+                "description": "Configurez la taille du réservoir et les états actifs.",
+                "data": {
+                    "tank_size": "Taille du réservoir (kg)",
+                    "active_statuses": "États actifs (consommation de granulés)",
+                    "power_levels": "Niveaux de puissance (séparés par des virgules)",
+                    "max_rate": "Taux de consommation maximum (kg/h)"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "L'appareil est déjà configuré"
+        }
+    },
+    "services": {
+        "set_level": {
+            "name": "Définir le niveau",
+            "description": "Définir manuellement le niveau de granulés restant.",
+            "fields": {
+                "level": {
+                    "name": "Niveau",
+                    "description": "Le niveau restant en pourcentage (0-100)."
+                },
+                "entry_id": {
+                    "name": "Configuration",
+                    "description": "L'entrée de configuration à mettre à jour."
+                },
+                "calibrate": {
+                    "name": "Calibrer",
+                    "description": "Si coché (valeur : true), le système utilisera cette correction pour apprendre et ajuster les taux de consommation."
+                }
+            }
+        }
+    }
+}
