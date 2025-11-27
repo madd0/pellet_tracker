@@ -5,8 +5,8 @@ set_level:
       selector:
         number:
           min: 0
-          max: 1000
-          unit_of_measurement: kg
+          max: 100
+          unit_of_measurement: "%"
           mode: box
     entry_id:
       required: true

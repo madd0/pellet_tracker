@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-11-27
+### Changed
+- Updated `pellet_tracker.set_level` service to accept a percentage (0-100) instead of kilograms for easier estimation.
+
 ## [0.3.0] - 2025-11-24
 ### Added
 - New service `pellet_tracker.set_level` to manually set the remaining pellet level (with optional calibration).

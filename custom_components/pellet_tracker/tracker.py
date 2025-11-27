@@ -307,12 +307,14 @@ class PelletTracker:
             model="Virtual Sensor",
         )
 
-    async def async_set_level(self, level_kg: float, calibrate: bool = False):
+    async def async_set_level(self, level_pct: int, calibrate: bool = False):
         """Manually set the current level."""
-        _LOGGER.info("Manual level set requested. Target: %.2f kg, Calibrate: %s", level_kg, calibrate)
-        _LOGGER.info("Current Level: %.2f kg", self.current_level_g / 1000)
-
-        new_level_g = level_kg * 1000
+        _LOGGER.info("Manual level set requested. Target: %d%%, Calibrate: %s", level_pct, calibrate)
+        
+        # Calculate grams from percentage
+        new_level_g = (level_pct / 100.0) * self.tank_size_g
+        
+        _LOGGER.info("Current Level: %.2f kg, New Level: %.2f kg", self.current_level_g / 1000, new_level_g / 1000)
         
         # Clamp
         if new_level_g > self.tank_size_g:

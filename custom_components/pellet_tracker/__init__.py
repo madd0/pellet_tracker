@@ -16,12 +16,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     
     async def handle_set_level(call):
         entry_id = call.data.get("entry_id")
-        level_kg = call.data.get("level")
+        level_pct = call.data.get("level")
         calibrate = call.data.get("calibrate", False)
         
         if DOMAIN in hass.data and entry_id in hass.data[DOMAIN]:
             tracker = hass.data[DOMAIN][entry_id]
-            await tracker.async_set_level(level_kg, calibrate)
+            await tracker.async_set_level(level_pct, calibrate)
             
     hass.services.async_register(DOMAIN, "set_level", handle_set_level)
     return True

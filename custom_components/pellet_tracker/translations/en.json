@@ -31,7 +31,7 @@
             "fields": {
                 "level": {
                     "name": "Level",
-                    "description": "The remaining level in kilograms."
+                    "description": "The remaining level in percentage (0-100)."
                 },
                 "entry_id": {
                     "name": "Config Entry",
