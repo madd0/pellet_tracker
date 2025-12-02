@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-12-02
+### Fixed
+- Fixed calibration for power level "0" (or any level interpolating to zero). Previously, these levels could never be calibrated because their base rate was 0. Now, all levels have a minimum base rate (5% of max rate) to bootstrap calibration.
+
 ## [0.5.0] - 2025-11-27
 ### Added
 - Spanish and French translations.
