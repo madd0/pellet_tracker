@@ -3,6 +3,7 @@
 ## Active Context
 - **Current Status**: Feature-complete MVP.
 - **Recent Fixes**:
+    - **Minimum Rate for Level 0**: Fixed an issue where power level "0" (or any level interpolating to 0) could never be calibrated because `rate * correction_factor = 0` always equals 0. Now, all levels have a minimum base rate (5% of max rate by default), allowing EWMA calibration to converge towards actual consumption.
     - **Configuration Updates**: Fixed an issue where updating power levels in the config would not take effect because stale rates were being restored from storage. Now, base rates are always recalculated from config, while learned correction factors are preserved.
 - **Implemented Features**:
     - Config Flow (Name, Status, Power, Tank Size).
@@ -10,6 +11,7 @@
     - **Dynamic Rate Calculation**: Rates are interpolated linearly based on a user-provided Max Rate.
     - **EWMA Auto-Calibration**: Automatically adjusts consumption rates based on refill behavior.
         - **Per-Level Calibration**: Distributes error correction to specific power levels based on their usage contribution.
+        - **Minimum Rate Floor**: Ensures all levels (including "0") have a non-zero base rate for calibration.
     - Device Grouping (Entities grouped under a unique device).
     - Virtual Sensor (0-100%).
     - Refill Button.

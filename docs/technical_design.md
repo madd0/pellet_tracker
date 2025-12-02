@@ -37,14 +37,19 @@ Instead of using hardcoded defaults, the integration calculates consumption rate
     *   The **Lowest Level** (if > 0) is assigned a calculated minimum fraction.
     *   Intermediate levels are calculated using **Linear Interpolation**.
 
-$$ \text{Rate}_{\text{level}} = \frac{\text{Level Value}}{\text{Max Level Value}} \times \text{Max Rate} $$
+$$ \text{Rate}_{\text{level}} = \max\left(\frac{\text{Level Value}}{\text{Max Level Value}} \times \text{Max Rate}, \text{Min Rate}\right) $$
+
+Where **Min Rate** = 5% of Max Rate (configurable via `DEFAULT_MIN_RATE_FACTOR` in `const.py`).
 
 *Example*:
-If Max Rate is 2000 g/h and levels are 1-5:
+If Max Rate is 2000 g/h and levels are 0-5:
 *   Level 5: 2000 g/h
 *   Level 1: (1/5) * 2000 = 400 g/h
+*   Level 0: max(0, 100) = 100 g/h (minimum rate)
 
-If the levels are non-numeric (e.g., "Low", "Med", "High"), the system falls back to index-based interpolation (33%, 66%, 100%).
+The **Minimum Rate** ensures that even Level 0 (or any level that would interpolate to zero) has a non-zero base rate. This allows the EWMA calibration to learn the actual consumption for these levels over time, rather than permanently assuming zero consumption.
+
+If the levels are non-numeric (e.g., "Low", "Med", "High"), the system falls back to index-based interpolation (33%, 66%, 100%), also with the minimum rate floor applied.
 
 ## 3. Auto-Calibration (EWMA)
 

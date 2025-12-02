@@ -19,6 +19,7 @@ from .const import (
     DEFAULT_TANK_SIZE,
     DEFAULT_MAX_RATE,
     DEFAULT_ALPHA,
+    DEFAULT_MIN_RATE_FACTOR,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +64,11 @@ class PelletTracker:
             # Get max from config (stored in kg/h, convert to g/h)
             max_rate = config.get(CONF_MAX_RATE, DEFAULT_MAX_RATE) * 1000
             
+            # Minimum rate for levels that would otherwise be 0 (e.g., power level "0").
+            # This allows calibration to learn the actual consumption for these levels.
+            # Set to ~5% of max rate as an initial estimate that can be adjusted via EWMA.
+            min_rate = max_rate * DEFAULT_MIN_RATE_FACTOR
+            
             # Try to parse levels as numbers to find the max level
             try:
                 numeric_levels = [float(l) for l in active_levels]
@@ -75,13 +81,15 @@ class PelletTracker:
                 # Interpolate based on numeric value relative to max level
                 for level_str, level_val in zip(active_levels, numeric_levels):
                     rate = (level_val / max_level_val) * max_rate
-                    self.rates[level_str] = int(rate)
+                    # Apply minimum rate to allow calibration for level 0 or similar
+                    self.rates[level_str] = int(max(rate, min_rate))
             else:
                 # Fallback to index-based interpolation if levels are not numeric
                 # Assumes levels are ordered from lowest to highest
                 for i, level in enumerate(active_levels):
                     rate = ((i + 1) / num_levels) * max_rate
-                    self.rates[level] = int(rate)
+                    # Apply minimum rate to allow calibration
+                    self.rates[level] = int(max(rate, min_rate))
 
         self.total_consumed_session_g = 0.0
         self.correction_factors = {}
