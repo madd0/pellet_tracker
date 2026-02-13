@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-13
+### Changed
+- **Bag-Based Model**: Replaced "Tank Size" with "Bag Size" (default 15 kg). The sensor now represents 0-100% of one bag, capping at 100% even when the tank holds more than one bag's worth.
+- **Additive Refill**: The "Refill" button is now "Add Bag" — it adds one bag of pellets to the current level instead of resetting to 100%.
+- **Weight-Based Set Level**: The `set_level` service now accepts weight in kg instead of a percentage. The `calibrate` parameter is now required (defaults to `false`).
+- **Calibration Only Via Service**: Removed automatic calibration on refill. Calibration is now only triggered via `set_level` with `calibrate: true`, based on direct observation of kg marks on the tank.
+
+### Added
+- **Config Entry Migration**: V1 entries with `tank_size` are automatically migrated to V2 with `bag_size`.
+
 ## [0.6.0] - 2025-12-02
 ### Fixed
 - Fixed calibration for power level "0" (or any level interpolating to zero). Previously, these levels could never be calibrated because their base rate was 0. Now, all levels have a minimum base rate (5% of max rate) to bootstrap calibration.
