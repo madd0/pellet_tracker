@@ -11,9 +11,9 @@
             },
             "params": {
                 "title": "Paramètres de Pellet Tracker",
-                "description": "Configurez la taille du réservoir et les états actifs.",
+                "description": "Configurez la taille du sac et les états actifs.",
                 "data": {
-                    "tank_size": "Taille du réservoir (kg)",
+                    "bag_size": "Taille du sac (kg)",
                     "active_statuses": "États actifs (consommation de granulés)",
                     "power_levels": "Niveaux de puissance (séparés par des virgules)",
                     "max_rate": "Taux de consommation maximum (kg/h)"
@@ -27,11 +27,11 @@
     "services": {
         "set_level": {
             "name": "Définir le niveau",
-            "description": "Définir manuellement le niveau de granulés restant.",
+            "description": "Définir manuellement le poids de granulés restant.",
             "fields": {
-                "level": {
-                    "name": "Niveau",
-                    "description": "Le niveau restant en pourcentage (0-100)."
+                "weight": {
+                    "name": "Poids",
+                    "description": "Le poids restant en kg."
                 },
                 "entry_id": {
                     "name": "Configuration",
@@ -39,7 +39,7 @@
                 },
                 "calibrate": {
                     "name": "Calibrer",
-                    "description": "Si coché (valeur : true), le système utilisera cette correction pour apprendre et ajuster les taux de consommation."
+                    "description": "Si vrai, le système utilisera cette correction pour apprendre et ajuster les taux de consommation."
                 }
             }
         }

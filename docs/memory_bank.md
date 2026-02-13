@@ -1,23 +1,29 @@
 # Project Memory Bank
 
 ## Active Context
-- **Current Status**: Feature-complete MVP.
-- **Recent Fixes**:
-    - **Minimum Rate for Level 0**: Fixed an issue where power level "0" (or any level interpolating to 0) could never be calibrated because `rate * correction_factor = 0` always equals 0. Now, all levels have a minimum base rate (5% of max rate by default), allowing EWMA calibration to converge towards actual consumption.
-    - **Configuration Updates**: Fixed an issue where updating power levels in the config would not take effect because stale rates were being restored from storage. Now, base rates are always recalculated from config, while learned correction factors are preserved.
+- **Current Status**: Weight-based tracking refactor complete.
+- **Recent Changes**:
+    - **Bag-Based Model**: Replaced fixed "tank size" concept with "bag size". The integration now tracks pellet level by weight internally. A "bag" (default 15 kg) defines what 100% means on the sensor.
+    - **Additive Refill**: The "Refill" button (now "Add Bag") adds one bag worth of pellets to the current level instead of resetting to 100%. The internal weight can exceed bag_size_g (e.g. 18 kg after adding 15 kg on top of 3 kg remaining), but the sensor caps at 100%.
+    - **Weight-Based Set Level Service**: `set_level` service now accepts weight in kg instead of percentage. The `calibrate` parameter is now required (defaults to `false`).
+    - **Calibration Only Via set_level**: Auto-calibration on refill was removed. Calibration only happens when calling `set_level` with `calibrate: true`, providing more reliable ground-truth data.
+    - **Config Entry Migration**: V1 → V2 migration renames `tank_size` to `bag_size` in existing config entries.
+- **Previous Fixes**:
+    - **Minimum Rate for Level 0**: Fixed an issue where power level "0" could never be calibrated. All levels now have a minimum base rate (5% of max rate).
+    - **Configuration Updates**: Fixed stale rates being restored from storage. Base rates are always recalculated from config.
 - **Implemented Features**:
-    - Config Flow (Name, Status, Power, Tank Size).
+    - Config Flow (Name, Status, Power, Bag Size).
     - **Custom Power Levels**: User can define specific levels (e.g., "1,2,3,4,5,6,7").
     - **Dynamic Rate Calculation**: Rates are interpolated linearly based on a user-provided Max Rate.
-    - **EWMA Auto-Calibration**: Automatically adjusts consumption rates based on refill behavior.
+    - **EWMA Auto-Calibration**: Adjusts consumption rates via `set_level` service with `calibrate: true`.
         - **Per-Level Calibration**: Distributes error correction to specific power levels based on their usage contribution.
         - **Minimum Rate Floor**: Ensures all levels (including "0") have a non-zero base rate for calibration.
     - Device Grouping (Entities grouped under a unique device).
-    - Virtual Sensor (0-100%).
-    - Refill Button.
+    - Virtual Sensor (0-100%, capped — values above bag size still show 100%).
+    - **Add Bag Button**: Adds one bag of pellets to the current level.
+    - **Service: Set Level**: Manual correction of pellet level in kg, with optional calibration.
     - Persistence (survives restarts).
     - Custom Icon (SVG/PNG) for HACS/GitHub.
-    - **Service: Set Level**: Allows manual correction of the pellet level (e.g., `pellet_tracker.set_level`).
 - **Pending Features**:
     - None.
 

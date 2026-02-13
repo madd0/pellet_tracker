@@ -1,12 +1,16 @@
 """The Pellet Tracker integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .tracker import PelletTracker
+
+_LOGGER = logging.getLogger(__name__)
 
 # List the platforms that you want to support.
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON]
@@ -16,12 +20,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     
     async def handle_set_level(call):
         entry_id = call.data.get("entry_id")
-        level_pct = call.data.get("level")
+        weight_kg = call.data.get("weight")
         calibrate = call.data.get("calibrate", False)
         
         if DOMAIN in hass.data and entry_id in hass.data[DOMAIN]:
             tracker = hass.data[DOMAIN][entry_id]
-            await tracker.async_set_level(level_pct, calibrate)
+            await tracker.async_set_level(weight_kg, calibrate)
             
     hass.services.async_register(DOMAIN, "set_level", handle_set_level)
     return True
@@ -44,6 +48,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry to new version."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new_data = dict(config_entry.data)
+        if "tank_size" in new_data:
+            new_data["bag_size"] = new_data.pop("tank_size")
+
+        new_options = dict(config_entry.options)
+        if "tank_size" in new_options:
+            new_options["bag_size"] = new_options.pop("tank_size")
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, options=new_options, version=2
+        )
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    return True
+
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""

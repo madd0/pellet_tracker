@@ -11,9 +11,9 @@
             },
             "params": {
                 "title": "Parámetros de Pellet Tracker",
-                "description": "Configure el tamaño del depósito y los estados activos.",
+                "description": "Configure el tamaño del saco y los estados activos.",
                 "data": {
-                    "tank_size": "Tamaño del depósito (kg)",
+                    "bag_size": "Tamaño del saco (kg)",
                     "active_statuses": "Estados activos (consumiendo pellets)",
                     "power_levels": "Niveles de potencia (separados por comas)",
                     "max_rate": "Tasa máxima de consumo (kg/h)"
@@ -27,11 +27,11 @@
     "services": {
         "set_level": {
             "name": "Establecer nivel",
-            "description": "Establecer manualmente el nivel restante de pellets.",
+            "description": "Establecer manualmente el peso restante de pellets.",
             "fields": {
-                "level": {
-                    "name": "Nivel",
-                    "description": "El nivel restante en porcentaje (0-100)."
+                "weight": {
+                    "name": "Peso",
+                    "description": "El peso restante en kg."
                 },
                 "entry_id": {
                     "name": "Configuración",
@@ -39,7 +39,7 @@
                 },
                 "calibrate": {
                     "name": "Calibrar",
-                    "description": "Si está marcado (valor: true), el sistema usará esta corrección para aprender y ajustar las tasas de consumo."
+                    "description": "Si es verdadero, el sistema usará esta corrección para aprender y ajustar las tasas de consumo."
                 }
             }
         }

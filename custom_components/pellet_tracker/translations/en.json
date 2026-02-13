@@ -11,9 +11,9 @@
             },
             "params": {
                 "title": "Pellet Tracker Parameters",
-                "description": "Configure tank size and active statuses.",
+                "description": "Configure bag size and active statuses.",
                 "data": {
-                    "tank_size": "Tank Size (kg)",
+                    "bag_size": "Bag Size (kg)",
                     "active_statuses": "Active Statuses (consuming pellets)",
                     "power_levels": "Power Levels (comma separated)",
                     "max_rate": "Maximum Consumption Rate (kg/h)"
@@ -27,11 +27,11 @@
     "services": {
         "set_level": {
             "name": "Set Level",
-            "description": "Manually set the remaining pellet level.",
+            "description": "Manually set the remaining pellet weight.",
             "fields": {
-                "level": {
-                    "name": "Level",
-                    "description": "The remaining level in percentage (0-100)."
+                "weight": {
+                    "name": "Weight",
+                    "description": "The remaining weight in kg."
                 },
                 "entry_id": {
                     "name": "Config Entry",
@@ -39,7 +39,7 @@
                 },
                 "calibrate": {
                     "name": "Calibrate",
-                    "description": "If checked (value: true), the system will use this correction to learn and adjust consumption rates."
+                    "description": "If true, the system will use this correction to learn and adjust consumption rates."
                 }
             }
         }

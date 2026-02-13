@@ -7,8 +7,10 @@ A custom integration for Home Assistant to track pellet stove consumption and re
 ## Features
 
 - **Virtual Sensor**: Estimates remaining pellets based on stove status and power level.
-- **Calibration**: Uses EWMA (Exponentially Weighted Moving Average) to learn consumption rates over time.
-- **Configurable**: Set tank size, initial rates, and calibration parameters.
+- **Weight-Based Tracking**: Tracks pellet level internally by weight (grams). The percentage sensor displays 0-100% based on bag size, capping at 100% even when the tank holds more.
+- **Add Bag**: One-press button to add a full bag of pellets to the current level.
+- **Calibration**: Uses EWMA (Exponentially Weighted Moving Average) to learn consumption rates over time, triggered via the `set_level` service.
+- **Configurable**: Set bag size, initial rates, and calibration parameters.
 
 ## Documentation
 
@@ -40,12 +42,23 @@ For a detailed explanation of how the integration works, including the math behi
     - **Name**: Give your stove a friendly name (e.g., "Living Room Stove").
     - **Status Entity**: The sensor indicating if the stove is On/Off/Heating.
     - **Power Entity**: The sensor indicating the current power level (e.g., 1-5).
-    - **Tank Size**: The capacity of your pellet tank in kg.
+    - **Bag Size**: The weight of a standard bag of pellets in kg (default: 15). This defines what 100% means on the sensor and what is added when pressing "Add Bag".
     - **Active Statuses**: Select the status values that indicate the stove is consuming pellets (e.g., "WORK", "START").
     - **Power Levels**: A comma-separated list of power levels your stove supports (e.g., "1, 2, 3, 4, 5").
     - **Maximum Consumption Rate**: The consumption rate at the highest power level in kg/h (e.g., 1.8). The integration will calculate rates for lower levels automatically.
 
 You can change these settings later by clicking "Configure" on the integration entry in the Devices & Services page.
+
+### Services
+
+#### `pellet_tracker.set_level`
+Manually set the current pellet weight and optionally trigger calibration.
+
+| Parameter | Type | Required | Default | Description |
+|:---|:---|:---|:---|:---|
+| `weight` | float | Yes | — | The remaining weight in kg (e.g., 3.5). |
+| `entry_id` | string | Yes | — | The config entry ID of the stove. |
+| `calibrate` | boolean | Yes | `false` | If `true`, the system uses the correction to adjust consumption rates via EWMA. |
 
 ## Contributing
 

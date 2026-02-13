@@ -17,11 +17,11 @@ from .const import (
     DOMAIN,
     CONF_STATUS_ENTITY,
     CONF_POWER_ENTITY,
-    CONF_TANK_SIZE,
+    CONF_BAG_SIZE,
     CONF_ACTIVE_STATUSES,
     CONF_POWER_LEVELS,
     CONF_MAX_RATE,
-    DEFAULT_TANK_SIZE,
+    DEFAULT_BAG_SIZE,
     DEFAULT_MAX_RATE,
 )
 
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Pellet Tracker."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -91,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             valid_defaults = [s for s in default_statuses if s in options]
             
             schema = vol.Schema({
-                vol.Required(CONF_TANK_SIZE, default=DEFAULT_TANK_SIZE): vol.Coerce(float),
+                vol.Required(CONF_BAG_SIZE, default=DEFAULT_BAG_SIZE): vol.Coerce(float),
                 vol.Required(
                     CONF_ACTIVE_STATUSES, default=valid_defaults
                 ): selector.SelectSelector(
@@ -105,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             # Fallback to text input
             schema = vol.Schema({
-                vol.Required(CONF_TANK_SIZE, default=DEFAULT_TANK_SIZE): vol.Coerce(float),
+                vol.Required(CONF_BAG_SIZE, default=DEFAULT_BAG_SIZE): vol.Coerce(float),
                 vol.Required(
                     CONF_ACTIVE_STATUSES, default=", ".join(default_statuses)
                 ): str,
@@ -171,7 +171,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             valid_defaults = [s for s in current_statuses if s in options]
             
             schema = vol.Schema({
-                vol.Required(CONF_TANK_SIZE, default=config.get(CONF_TANK_SIZE, DEFAULT_TANK_SIZE)): vol.Coerce(float),
+                vol.Required(CONF_BAG_SIZE, default=config.get(CONF_BAG_SIZE, DEFAULT_BAG_SIZE)): vol.Coerce(float),
                 vol.Required(
                     CONF_ACTIVE_STATUSES, default=valid_defaults
                 ): selector.SelectSelector(
@@ -187,7 +187,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 current_statuses = ", ".join(current_statuses)
                 
             schema = vol.Schema({
-                vol.Required(CONF_TANK_SIZE, default=config.get(CONF_TANK_SIZE, DEFAULT_TANK_SIZE)): vol.Coerce(float),
+                vol.Required(CONF_BAG_SIZE, default=config.get(CONF_BAG_SIZE, DEFAULT_BAG_SIZE)): vol.Coerce(float),
                 vol.Required(
                     CONF_ACTIVE_STATUSES, default=current_statuses
                 ): str,

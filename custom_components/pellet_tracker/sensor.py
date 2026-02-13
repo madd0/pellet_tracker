@@ -48,10 +48,15 @@ class PelletTrackerSensor(SensorEntity):
 
     @property
     def native_value(self) -> int:
-        """Return the state of the sensor."""
-        if self._tracker.tank_size_g <= 0:
+        """Return the state of the sensor.
+
+        Percentage is based on bag_size_g (one full bag = 100%).
+        Values above bag_size_g (e.g. after adding a bag on top of
+        remaining pellets) are capped at 100%.
+        """
+        if self._tracker.bag_size_g <= 0:
             return 0
-        pct = (self._tracker.current_level_g / self._tracker.tank_size_g) * 100
+        pct = (self._tracker.current_level_g / self._tracker.bag_size_g) * 100
         return max(0, min(100, int(pct)))
 
     @property

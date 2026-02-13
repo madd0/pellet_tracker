@@ -12,6 +12,11 @@ It relies on two primary inputs from the stove:
 
 The integration groups its entities (Sensor, Button) under a single **Device** in Home Assistant, allowing for easy management of multiple stoves.
 
+### Key Concepts
+- **Bag Size**: The weight of a standard bag of pellets (default 15 kg). This defines what "100%" means on the sensor and what is added when pressing the "Add Bag" button.
+- **Internal Tracking**: The level is tracked internally in grams (`current_level_g`). It can exceed `bag_size_g` (e.g. after adding a bag on top of remaining pellets).
+- **Display**: The percentage sensor displays `min(100, max(0, level / bag_size * 100))`. Above bag size = 100%. The real weight is always available as a state attribute.
+
 ## 2. Consumption Model
 
 The core logic is based on a **Consumption Rate Model**. We assume that for every power level, the stove consumes a specific amount of pellets per hour (grams/hour).
@@ -60,12 +65,14 @@ Pellet consumption rates are not static. They vary based on:
 To address this, the integration implements an **Exponentially Weighted Moving Average (EWMA)** algorithm to "learn" the true consumption rates over time.
 
 ### How it works
-1.  The system tracks how much it *thinks* it consumed since the last fill (`total_consumed_session_g`).
+1.  The system tracks how much it *thinks* it consumed since the last known level (`total_consumed_session_g`).
 2.  It also tracks the consumption **per power level** (`session_consumption_by_level`).
-3.  When the user triggers a **Refill Event**, the system checks if the tank is nearly empty (Current Level < 10% of Tank Size).
-4.  If calibrating, it calculates an error ratio: `Actual (Tank Size) / Estimated`.
+3.  When the user calls the `set_level` service with `calibrate: true`, providing the observed weight in kg:
+    *   `session_start_g = current_level_g + total_consumed_session_g` (this is correct even with intermediate refills, since refills add to `current_level_g` without affecting `total_consumed_session_g`).
+    *   `actual_consumption_g = session_start_g - new_level_g`
+    *   The error ratio is: `actual_consumption_g / total_consumed_session_g`
     *   The error ratio is clamped between 0.5 and 2.0 to prevent extreme adjustments from a single anomalous session.
-5.  It updates the **Correction Factor** for each power level that was used, weighted by its contribution.
+4.  It updates the **Correction Factor** for each power level that was used, weighted by its contribution.
 
 $$ \text{New Factor}_i = \text{Old Factor}_i \times (1 + \alpha \times \text{Weight}_i \times (\text{Error Ratio} - 1)) $$
 
@@ -78,19 +85,19 @@ This ensures that if the stove mostly ran at Power 5, the correction is primaril
 ## 4. Architecture
 
 ### Components
-*   **`Sensor`**: The main entity (`sensor.pellet_level`) displaying the percentage.
+*   **`Sensor`**: The main entity (`sensor.pellet_level`) displaying the percentage (capped at 100% even if internal level exceeds bag size).
 *   **`Storage`**: Uses `hass.helpers.storage.Store` to persist the state (current level, accumulated usage, learned correction factors) to disk. This ensures data survives Home Assistant restarts. Note: Base consumption rates are *not* persisted; they are recalculated from configuration on every load to ensure config changes take effect immediately.
-*   **`Config Flow`**: UI for setting up the integration, selecting the source entities, and defining tank size.
+*   **`Config Flow`**: UI for setting up the integration, selecting the source entities, and defining bag size. Includes V1→V2 migration that renames `tank_size` to `bag_size`.
 
 ### State Management
 The integration must handle:
 *   **Midnight Crossover**: Correctly calculating time intervals that span across days.
 *   **Restarts**: Saving the exact timestamp and level before shutdown and restoring it immediately upon startup to prevent data loss.
+*   **Overflow Levels**: `current_level_g` can exceed `bag_size_g` after adding a bag on top of remaining pellets. The sensor caps the display at 100% but the real weight is tracked internally for accurate consumption calculations.
 
 ## 5. Entities
 
 | Entity | Type | Description |
 | :--- | :--- | :--- |
-| `sensor.pellet_level` | Sensor | The current remaining level (0-100%). |
-| `sensor.pellet_remaining` | Sensor | The estimated weight remaining (kg/g). |
-| `button.pellet_refill` | Button | Trigger this when filling the tank to 100%. |
+| `sensor.pellet_level` | Sensor | The current remaining level (0-100%, capped). Attribute `remaining_kg` shows the real weight. |
+| `button.pellet_add_bag` | Button | Adds one bag of pellets to the current level. |

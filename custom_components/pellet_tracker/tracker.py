@@ -12,11 +12,12 @@ from .const import (
     DOMAIN,
     CONF_STATUS_ENTITY,
     CONF_POWER_ENTITY,
+    CONF_BAG_SIZE,
     CONF_TANK_SIZE,
     CONF_ACTIVE_STATUSES,
     CONF_POWER_LEVELS,
     CONF_MAX_RATE,
-    DEFAULT_TANK_SIZE,
+    DEFAULT_BAG_SIZE,
     DEFAULT_MAX_RATE,
     DEFAULT_ALPHA,
     DEFAULT_MIN_RATE_FACTOR,
@@ -42,10 +43,13 @@ class PelletTracker:
         # Unique storage key per entry to support multiple stoves if needed
         self._store = Store(hass, STORAGE_VERSION, f"{STORAGE_KEY}_{entry_id}")
         
-        self.tank_size_g = config.get(CONF_TANK_SIZE, DEFAULT_TANK_SIZE) * 1000
+        # bag_size_g defines what "100%" means (one full bag)
+        # Fall back to legacy tank_size for migrated entries
+        bag_size_kg = config.get(CONF_BAG_SIZE) or config.get(CONF_TANK_SIZE, DEFAULT_BAG_SIZE)
+        self.bag_size_g = bag_size_kg * 1000
         self.active_statuses = config.get(CONF_ACTIVE_STATUSES, [])
         
-        self.current_level_g = self.tank_size_g
+        self.current_level_g = self.bag_size_g
         
         # Initialize rates based on configured power levels
         power_levels = config.get(CONF_POWER_LEVELS)
@@ -223,27 +227,13 @@ class PelletTracker:
             await self._async_save_data()
 
     async def async_refill(self):
-        """Refill the tank to full."""
-        _LOGGER.info("Refill requested. Current Level: %.2f kg", self.current_level_g / 1000)
+        """Add a bag of pellets to the tank."""
+        _LOGGER.info(
+            "Refill (add bag) requested. Current Level: %.2f kg, Bag Size: %.2f kg",
+            self.current_level_g / 1000, self.bag_size_g / 1000
+        )
 
-        # EWMA Auto-Calibration (Per-Level)
-        # We only calibrate if the tank is nearly empty (< 10% remaining)
-        threshold = self.tank_size_g * 0.1
-        
-        if self.current_level_g < threshold and self.total_consumed_session_g > 0:
-            # Assume we consumed the entire tank (Actual = Tank Size)
-            await self._async_calibrate(self.tank_size_g)
-        else:
-            _LOGGER.debug(
-                "Skipping calibration during refill. Level (%.2f kg) >= Threshold (%.2f kg) or No Consumption (%.2f kg)",
-                self.current_level_g / 1000,
-                threshold / 1000,
-                self.total_consumed_session_g / 1000
-            )
-
-        self.current_level_g = self.tank_size_g
-        self.total_consumed_session_g = 0
-        self.session_consumption_by_level = {} # Reset session tracking
+        self.current_level_g += self.bag_size_g
         self.last_update = dt_util.utcnow()
         
         _LOGGER.info("Refill complete. New Level: %.2f kg", self.current_level_g / 1000)
@@ -315,47 +305,36 @@ class PelletTracker:
             model="Virtual Sensor",
         )
 
-    async def async_set_level(self, level_pct: int, calibrate: bool = False):
-        """Manually set the current level."""
-        _LOGGER.info("Manual level set requested. Target: %d%%, Calibrate: %s", level_pct, calibrate)
+    async def async_set_level(self, weight_kg: float, calibrate: bool = False):
+        """Manually set the current level by weight in kg."""
+        _LOGGER.info("Manual level set requested. Target: %.2f kg, Calibrate: %s", weight_kg, calibrate)
         
-        # Calculate grams from percentage
-        new_level_g = (level_pct / 100.0) * self.tank_size_g
+        new_level_g = weight_kg * 1000
         
         _LOGGER.info("Current Level: %.2f kg, New Level: %.2f kg", self.current_level_g / 1000, new_level_g / 1000)
         
-        # Clamp
-        if new_level_g > self.tank_size_g:
-            new_level_g = self.tank_size_g
+        # Clamp to 0 (no upper clamp — tank can hold more than one bag)
         if new_level_g < 0:
             new_level_g = 0
             
         if calibrate:
             if self.total_consumed_session_g > 0:
                 # Calculate actual consumption implied by this correction
-                # Start_Level = current_level_g + total_consumed_session_g
-                # Actual_Consumed = Start_Level - new_level_g
-                # Actual_Consumed = (current_level_g + total_consumed_session_g) - new_level_g
-                
-                actual_consumption_g = (self.current_level_g + self.total_consumed_session_g) - new_level_g
+                # session_start = current_level_g + total_consumed_session_g
+                # This works even with intermediate refills: refills increase
+                # current_level_g but not total_consumed_session_g, so session_start
+                # correctly represents total pellets available during the session.
+                session_start_g = self.current_level_g + self.total_consumed_session_g
+                actual_consumption_g = session_start_g - new_level_g
                 
                 if actual_consumption_g > 0:
                     await self._async_calibrate(actual_consumption_g)
-                    
-                    # Reset session tracking after calibration
-                    self.total_consumed_session_g = 0
-                    self.session_consumption_by_level = {}
                 else:
                     _LOGGER.warning("Cannot calibrate: Implied consumption is negative or zero.")
             else:
                 _LOGGER.debug("Skipping calibration: No session consumption recorded.")
         
-        # If we are setting a new level (even without calibration), we should probably reset the session
-        # to establish a new ground truth, otherwise future calibrations will be skewed by the pre-correction error.
-        # However, if calibrate=False, maybe the user just wants to tweak it slightly?
-        # Let's reset session only if we calibrated OR if the change is significant?
-        # For simplicity and correctness, setting a manual level establishes a new known state.
-        # We should reset the session counters so the next period starts fresh from this known level.
+        # Always reset session — we're establishing a new known level as ground truth.
         self.total_consumed_session_g = 0
         self.session_consumption_by_level = {}
         

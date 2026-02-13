@@ -22,8 +22,8 @@ class PelletRefillButton(ButtonEntity):
     """Representation of a Pellet Refill Button."""
 
     _attr_has_entity_name = True
-    _attr_name = "Refill Tank"
-    _attr_icon = "mdi:autorenew"
+    _attr_name = "Add Bag"
+    _attr_icon = "mdi:sack"
 
     def __init__(self, tracker: PelletTracker) -> None:
         """Initialize the button."""
