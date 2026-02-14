@@ -20,6 +20,7 @@
         - **Minimum Rate Floor**: Ensures all levels (including "0") have a non-zero base rate for calibration.
     - Device Grouping (Entities grouped under a unique device).
     - Virtual Sensor (0-100%, capped — values above bag size still show 100%).
+    - **Weight Sensor**: Dedicated sensor showing remaining pellet weight in kg (dashboardable).
     - **Add Bag Button**: Adds one bag of pellets to the current level.
     - **Service: Set Level**: Manual correction of pellet level in kg, with optional calibration.
     - Persistence (survives restarts).

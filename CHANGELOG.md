@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-02-14
+### Added
+- New **Pellet Weight** sensor (`sensor.pellet_weight`) showing the remaining weight in kg, for easier dashboarding.
+
 ## [0.7.0] - 2026-02-13
 ### Changed
 - **Bag-Based Model**: Replaced "Tank Size" with "Bag Size" (default 15 kg). The sensor now represents 0-100% of one bag, capping at 100% even when the tank holds more than one bag's worth.

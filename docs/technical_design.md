@@ -85,7 +85,7 @@ This ensures that if the stove mostly ran at Power 5, the correction is primaril
 ## 4. Architecture
 
 ### Components
-*   **`Sensor`**: The main entity (`sensor.pellet_level`) displaying the percentage (capped at 100% even if internal level exceeds bag size).
+*   **`Sensor`**: Two entities: `sensor.pellet_level` displaying the percentage (capped at 100%) and `sensor.pellet_weight` displaying the remaining weight in kg.
 *   **`Storage`**: Uses `hass.helpers.storage.Store` to persist the state (current level, accumulated usage, learned correction factors) to disk. This ensures data survives Home Assistant restarts. Note: Base consumption rates are *not* persisted; they are recalculated from configuration on every load to ensure config changes take effect immediately.
 *   **`Config Flow`**: UI for setting up the integration, selecting the source entities, and defining bag size. Includes V1→V2 migration that renames `tank_size` to `bag_size`.
 
@@ -100,4 +100,5 @@ The integration must handle:
 | Entity | Type | Description |
 | :--- | :--- | :--- |
 | `sensor.pellet_level` | Sensor | The current remaining level (0-100%, capped). Attribute `remaining_kg` shows the real weight. |
+| `sensor.pellet_weight` | Sensor | The remaining pellet weight in kg (not capped, shows real value). |
 | `button.pellet_add_bag` | Button | Adds one bag of pellets to the current level. |

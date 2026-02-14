@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,7 +21,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Pellet Tracker sensor."""
     tracker: PelletTracker = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([PelletTrackerSensor(tracker)])
+    async_add_entities([
+        PelletTrackerSensor(tracker),
+        PelletWeightSensor(tracker),
+    ])
 
 class PelletTrackerSensor(SensorEntity):
     """Representation of a Pellet Tracker Sensor."""
@@ -67,3 +70,31 @@ class PelletTrackerSensor(SensorEntity):
             "current_rates": self._tracker.rates,
             "session_consumed_kg": round(self._tracker.total_consumed_session_g / 1000, 2),
         }
+
+
+class PelletWeightSensor(SensorEntity):
+    """Sensor showing the remaining pellet weight in kg."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Pellet Weight"
+    _attr_device_class = SensorDeviceClass.WEIGHT
+    _attr_native_unit_of_measurement = UnitOfMass.KILOGRAMS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:weight-kilogram"
+
+    def __init__(self, tracker: PelletTracker) -> None:
+        """Initialize the sensor."""
+        self._tracker = tracker
+        self._attr_unique_id = f"{tracker.entry_id}_weight"
+        self._attr_device_info = tracker.device_info
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        self.async_on_remove(
+            self._tracker.add_listener(self.async_write_ha_state)
+        )
+
+    @property
+    def native_value(self) -> float:
+        """Return the remaining weight in kg."""
+        return round(self._tracker.current_level_g / 1000, 2)
