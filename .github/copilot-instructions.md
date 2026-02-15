@@ -31,6 +31,7 @@ The project follows a "Coordinator/Tracker" pattern where logic is separated fro
 - **Bag-Based Model**: The integration tracks pellets by weight internally. "Bag Size" (default 15 kg) defines what 100% means. The internal level can exceed bag_size_g (e.g. after adding a bag on top of remaining pellets), but the sensor caps at 100%.
 - **Additive Refill**: The "Add Bag" button adds bag_size_g to the current level (does not reset to full). No calibration on refill.
 - **Calibration**: Only triggered via the `set_level` service with `calibrate: true`. The user reads the kg marks on the tank and provides the observed weight. EWMA applies per-level correction factors.
+- **Time Remaining Prediction**: Uses an EWMA rolling average of the effective burn rate (`avg_consumption_rate` in tracker.py). When stove is active, prediction uses current rate; when off, falls back to rolling average or last-known-power rate. The sensor uses `SensorDeviceClass.DURATION` with `UnitOfTime.SECONDS` so HA formats it as a time span.
 - **Midnight Handling**: `tracker.py` uses `dt_util.utcnow()` and calculates deltas, so midnight is handled naturally.
 - **Persistence**: Data is saved to `.storage/pellet_tracker.storage_{entry_id}`.
 - **Config Migration**: V1 entries (with `tank_size`) are automatically migrated to V2 (`bag_size`) via `async_migrate_entry` in `__init__.py`.

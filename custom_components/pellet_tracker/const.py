@@ -17,3 +17,4 @@ DEFAULT_ACTIVE_STATUSES = ["WORK", "START"]
 DEFAULT_MAX_RATE = 1.8  # kg/h
 DEFAULT_ALPHA = 0.15  # Learning rate for EWMA
 DEFAULT_MIN_RATE_FACTOR = 0.05  # Minimum rate as fraction of max rate (5%)
+DEFAULT_RATE_EWMA_ALPHA = 0.01  # EWMA alpha for rolling avg consumption rate (~1h half-life at 1-min updates)

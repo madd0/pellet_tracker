@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_MAX_RATE,
     DEFAULT_ALPHA,
     DEFAULT_MIN_RATE_FACTOR,
+    DEFAULT_RATE_EWMA_ALPHA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,6 +99,12 @@ class PelletTracker:
         self.total_consumed_session_g = 0.0
         self.correction_factors = {}
         self.session_consumption_by_level = {}
+
+        # Rolling average of effective consumption rate (g/h) during active burning.
+        # Updated via EWMA every minute tick when stove is active.
+        self.avg_consumption_rate: float = 0.0
+        # Last known power level — used for predictions when the stove is off.
+        self.last_known_power: str | None = None
         self.last_update = dt_util.utcnow()
         
         self._listeners = []
@@ -121,6 +128,8 @@ class PelletTracker:
             # Ensure keys are strings
             self.correction_factors = {str(k): v for k, v in self.correction_factors.items()}
             self.session_consumption_by_level = {str(k): v for k, v in self.session_consumption_by_level.items()}
+            self.avg_consumption_rate = restored.get("avg_consumption_rate", 0.0)
+            self.last_known_power = restored.get("last_known_power", None)
 
             _LOGGER.debug(
                 "Restored state: Level=%.1fkg, Calibration Factors=%s. Base Rates (Config)=%s", 
@@ -208,8 +217,23 @@ class PelletTracker:
             
             # Apply correction factor for this specific level
             factor = self.correction_factors.get(power, 1.0)
-            consumption = (rate * factor) * elapsed_hours
-            
+            effective_rate = rate * factor
+            consumption = effective_rate * elapsed_hours
+
+            # Update rolling average of consumption rate (EWMA)
+            if self.avg_consumption_rate <= 0:
+                # Bootstrap: first active tick initializes the average
+                self.avg_consumption_rate = effective_rate
+            else:
+                alpha = DEFAULT_RATE_EWMA_ALPHA
+                self.avg_consumption_rate = (
+                    alpha * effective_rate
+                    + (1 - alpha) * self.avg_consumption_rate
+                )
+
+            # Track last known power level for off-state predictions
+            self.last_known_power = power
+
             # Track consumption per level for calibration
             if consumption > 0:
                 current_level_consumption = self.session_consumption_by_level.get(power, 0.0)
@@ -284,6 +308,72 @@ class PelletTracker:
         }
         _LOGGER.debug("New Effective Rates (g/h): %s", effective_rates)
 
+    @property
+    def current_effective_rate(self) -> float | None:
+        """Return the current effective consumption rate (g/h) if stove is active, else None."""
+        status_state = self.hass.states.get(self.config[CONF_STATUS_ENTITY])
+        power_state = self.hass.states.get(self.config[CONF_POWER_ENTITY])
+
+        if not status_state or not power_state:
+            return None
+
+        if status_state.state not in self.active_statuses:
+            return None
+
+        power = power_state.state
+        try:
+            power = str(int(float(power)))
+        except (ValueError, TypeError):
+            pass
+
+        rate = self.rates.get(power)
+        if rate is None:
+            return None
+
+        factor = self.correction_factors.get(power, 1.0)
+        return rate * factor
+
+    @property
+    def prediction_rate(self) -> float | None:
+        """Return the best available rate (g/h) for time-remaining predictions.
+
+        Priority: current effective rate > rolling average > last-known-power rate.
+        """
+        # If stove is active, use current rate
+        current = self.current_effective_rate
+        if current is not None and current > 0:
+            return current
+
+        # Stove is off — prefer rolling average if available
+        if self.avg_consumption_rate > 0:
+            return self.avg_consumption_rate
+
+        # Fallback: use the rate for the last known power level
+        if self.last_known_power is not None:
+            rate = self.rates.get(self.last_known_power)
+            if rate is not None:
+                factor = self.correction_factors.get(self.last_known_power, 1.0)
+                return rate * factor
+
+        return None
+
+    @property
+    def estimated_time_remaining_s(self) -> float | None:
+        """Return estimated remaining burn time in seconds, or None if unavailable."""
+        rate = self.prediction_rate
+        if rate is None or rate <= 0 or self.current_level_g <= 0:
+            return None
+        hours = self.current_level_g / rate
+        return hours * 3600
+
+    @property
+    def estimated_empty_datetime(self) -> datetime | None:
+        """Return the estimated datetime when pellets will be empty, or None."""
+        remaining_s = self.estimated_time_remaining_s
+        if remaining_s is None:
+            return None
+        return dt_util.utcnow() + timedelta(seconds=remaining_s)
+
     async def _async_save_data(self):
         """Save data to storage."""
         data = {
@@ -292,6 +382,8 @@ class PelletTracker:
             "total_consumed_session_g": self.total_consumed_session_g,
             "correction_factors": self.correction_factors,
             "session_consumption_by_level": self.session_consumption_by_level,
+            "avg_consumption_rate": self.avg_consumption_rate,
+            "last_known_power": self.last_known_power,
         }
         await self._store.async_save(data)
 

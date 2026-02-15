@@ -21,6 +21,7 @@
     - Device Grouping (Entities grouped under a unique device).
     - Virtual Sensor (0-100%, capped — values above bag size still show 100%).
     - **Weight Sensor**: Dedicated sensor showing remaining pellet weight in kg (dashboardable).
+    - **Time Remaining Sensor**: Predicts how long the current pellets will last (displayed as a time span via `SensorDeviceClass.DURATION`). Uses an EWMA rolling average of the effective burn rate. When stove is active, prediction uses current burn rate; when off, it falls back to the rolling average or last known power level.
     - **Add Bag Button**: Adds one bag of pellets to the current level.
     - **Service: Set Level**: Manual correction of pellet level in kg, with optional calibration.
     - Persistence (survives restarts).

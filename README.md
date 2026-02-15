@@ -8,6 +8,7 @@ A custom integration for Home Assistant to track pellet stove consumption and re
 
 - **Virtual Sensor**: Estimates remaining pellets based on stove status and power level.
 - **Weight-Based Tracking**: Tracks pellet level internally by weight (grams). The percentage sensor displays 0-100% based on bag size, capping at 100% even when the tank holds more.
+- **Time Remaining Prediction**: Estimates how long the current pellets will last, displayed as a time span (e.g., "2 days, 05:30:00"). Uses a rolling average of burn rates and adapts to power level changes.
 - **Add Bag**: One-press button to add a full bag of pellets to the current level.
 - **Calibration**: Uses EWMA (Exponentially Weighted Moving Average) to learn consumption rates over time, triggered via the `set_level` service.
 - **Configurable**: Set bag size, initial rates, and calibration parameters.

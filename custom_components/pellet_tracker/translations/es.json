@@ -43,5 +43,12 @@
                 }
             }
         }
+    },
+    "entity": {
+        "sensor": {
+            "time_remaining": {
+                "name": "Tiempo restante"
+            }
+        }
     }
 }

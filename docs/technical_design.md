@@ -95,10 +95,38 @@ The integration must handle:
 *   **Restarts**: Saving the exact timestamp and level before shutdown and restoring it immediately upon startup to prevent data loss.
 *   **Overflow Levels**: `current_level_g` can exceed `bag_size_g` after adding a bag on top of remaining pellets. The sensor caps the display at 100% but the real weight is tracked internally for accurate consumption calculations.
 
-## 5. Entities
+## 6. Time Remaining Prediction
+
+The integration exposes a **Time Remaining** sensor (`SensorDeviceClass.DURATION`) that predicts how long the current pellets will last.
+
+### Rolling Average (EWMA)
+A rolling average of the effective consumption rate is maintained using an EWMA with alpha = 0.01 (approximately 1-hour half-life at 1-minute updates). This smooths out fluctuations from power level changes throughout the day.
+
+$$ \text{Avg Rate}_{new} = \alpha \times \text{Current Rate} + (1 - \alpha) \times \text{Avg Rate}_{old} $$
+
+### Prediction Priority
+The sensor selects the best available rate for its prediction:
+1.  **Stove Active**: Current effective rate (base rate × correction factor for the active power level).
+2.  **Stove Off**: Rolling average consumption rate (if available).
+3.  **Fallback**: Rate for the last known power level.
+
+$$ \text{Time Remaining} = \frac{\text{Current Level (g)}}{\text{Prediction Rate (g/h)}} $$
+
+The value is provided to Home Assistant in seconds, allowing the frontend to render it as a human-readable time span (e.g., "2 days, 05:30:00").
+
+### Extra Attributes
+| Attribute | Description |
+| :--- | :--- |
+| `burn_rate_kg_h` | The rate currently used for the prediction (kg/h). |
+| `avg_burn_rate_kg_h` | The EWMA rolling average burn rate (kg/h). |
+| `estimated_empty_at` | ISO 8601 datetime when pellets are predicted to run out. |
+| `last_known_power` | The last power level observed while the stove was active. |
+
+## 6. Entities
 
 | Entity | Type | Description |
 | :--- | :--- | :--- |
 | `sensor.pellet_level` | Sensor | The current remaining level (0-100%, capped). Attribute `remaining_kg` shows the real weight. |
 | `sensor.pellet_weight` | Sensor | The remaining pellet weight in kg (not capped, shows real value). |
+| `sensor.pellet_time_remaining` | Sensor | Estimated time remaining before pellets run out (displayed as a time span). Attributes include burn rate, average burn rate, estimated empty date, and last known power level. |
 | `button.pellet_add_bag` | Button | Adds one bag of pellets to the current level. |

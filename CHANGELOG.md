@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-02-15
+### Added
+- New **Time Remaining** sensor (`sensor.pellet_time_remaining`) that predicts how long the current pellets will last, displayed as a time span (e.g., "2 days, 05:30:00").
+- EWMA rolling average of burn rate for smoother predictions across power level changes.
+- Prediction uses current burn rate when stove is active, falls back to rolling average or last known power level when off.
+- Extra attributes: `burn_rate_kg_h`, `avg_burn_rate_kg_h`, `estimated_empty_at`, `last_known_power`.
+
 ## [0.8.0] - 2026-02-14
 ### Added
 - New **Pellet Weight** sensor (`sensor.pellet_weight`) showing the remaining weight in kg, for easier dashboarding.
