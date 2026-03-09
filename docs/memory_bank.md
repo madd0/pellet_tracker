@@ -26,6 +26,7 @@
     - **Service: Set Level**: Manual correction of pellet level in kg, with optional calibration.
     - Persistence (survives restarts).
     - Custom Icon (SVG/PNG) for HACS/GitHub.
+    - **Local Brand Images**: Ships `brand/icon.png` inside the integration directory so HA 2026.3+ displays the integration icon natively without relying on the brands CDN.
 - **Pending Features**:
     - None.
 

@@ -34,6 +34,7 @@ The project follows a "Coordinator/Tracker" pattern where logic is separated fro
 - **Time Remaining Prediction**: Uses an EWMA rolling average of the effective burn rate (`avg_consumption_rate` in tracker.py). When stove is active, prediction uses current rate; when off, falls back to rolling average or last-known-power rate. The sensor uses `SensorDeviceClass.DURATION` with `UnitOfTime.SECONDS` so HA formats it as a time span.
 - **Midnight Handling**: `tracker.py` uses `dt_util.utcnow()` and calculates deltas, so midnight is handled naturally.
 - **Persistence**: Data is saved to `.storage/pellet_tracker.storage_{entry_id}`.
+- **Brand Images**: The integration ships `brand/icon.png` for native HA UI display (2026.3+). Do not submit to the brands repository.
 - **Config Migration**: V1 entries (with `tank_size`) are automatically migrated to V2 (`bag_size`) via `async_migrate_entry` in `__init__.py`.
 
 ## Documentation Maintenance

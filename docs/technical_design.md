@@ -130,3 +130,13 @@ The value is provided to Home Assistant in seconds, allowing the frontend to ren
 | `sensor.pellet_weight` | Sensor | The remaining pellet weight in kg (not capped, shows real value). |
 | `sensor.pellet_time_remaining` | Sensor | Estimated time remaining before pellets run out (displayed as a time span). Attributes include burn rate, average burn rate, estimated empty date, and last known power level. |
 | `button.pellet_add_bag` | Button | Adds one bag of pellets to the current level. |
+
+## 7. Brand Images
+
+Starting with Home Assistant 2026.3, custom integrations can include their own brand images. The integration ships a `brand/` directory containing `icon.png`, which is displayed in the HA UI (Settings, Devices & Services, etc.) without requiring submission to the brands repository or fetching from the CDN.
+
+```
+custom_components/pellet_tracker/
+└── brand/
+    └── icon.png
+```

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-09
+### Added
+- **Local Brand Images**: The integration now ships its own `brand/icon.png` for native display in the Home Assistant UI (requires HA 2026.3+). No submission to the brands repository needed.
+
 ## [0.9.0] - 2026-02-15
 ### Added
 - New **Time Remaining** sensor (`sensor.pellet_time_remaining`) that predicts how long the current pellets will last, displayed as a time span (e.g., "2 days, 05:30:00").

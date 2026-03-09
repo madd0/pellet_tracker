@@ -12,6 +12,7 @@ A custom integration for Home Assistant to track pellet stove consumption and re
 - **Add Bag**: One-press button to add a full bag of pellets to the current level.
 - **Calibration**: Uses EWMA (Exponentially Weighted Moving Average) to learn consumption rates over time, triggered via the `set_level` service.
 - **Configurable**: Set bag size, initial rates, and calibration parameters.
+- **Local Brand Icon**: Ships its own icon for display in the HA UI (requires HA 2026.3+).
 
 ## Documentation
 
